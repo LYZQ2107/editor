@@ -1,0 +1,34 @@
+name: Build and Deploy to Server
+
+on:
+    push:
+        branches:
+            - main  # 监听 main 分支的推送
+    workflow_dispatch:  # 允许手动触发工作流
+
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest  # 使用 Ubuntu 环境运行工作流
+        steps:
+            - name: Checkout code 🛎️
+              uses: actions/checkout@v3  # 检出代码
+
+            - name: Setup Node.js Environment 🧰
+              uses: actions/setup-node@v3  # 设置 Node.js 环境
+              with:
+                  node-version: '16'  # 使用 Node.js 16.x
+                  cache: 'npm'  # 启用 npm 缓存
+
+            - name: Install dependencies and build 🔧
+              run: |
+                  npm install  # 安装依赖
+                  npm run build  # 构建项目
+
+            - name: Deploy to Server 🚀
+              uses: easingthemes/ssh-deploy@v2.1.5  # 使用 SSH 部署到服务器
+              with:
+                  ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}  # 从 Secrets 获取 SSH 私钥
+                  remote-host: ${{ secrets.REMOTE_HOST }}  # 服务器 IP
+                  remote-user: ${{ secrets.REMOTE_USER }}  # 服务器用户名
+                  source-directory: ./dist  # 构建后的输出目录（默认为 ./dist）
+                  target-directory: /BridgeV2Buildup  # 服务器上的目标目录
